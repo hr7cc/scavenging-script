@@ -16,7 +16,7 @@ var scriptData = {
 // User Input
 if (typeof DEBUG !== 'boolean') DEBUG = false;
 // if (typeof DEBUG !== 'boolean') DEBUG = true;
-var maxScavHours = 3;
+var maxScavHours = 6;
 
 // Define main mass scav url
 if (game_data.player.sitter > 0) {
