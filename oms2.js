@@ -10,8 +10,8 @@ var scriptData = {
 };
 
 // Change to true to debug
-// if (typeof DEBUG !== 'boolean') DEBUG = false;
-if (typeof DEBUG !== 'boolean') DEBUG = true;
+if (typeof DEBUG !== 'boolean') DEBUG = false;
+// if (typeof DEBUG !== 'boolean') DEBUG = true;
 
 if (game_data.player.sitter > 0) {
 	URLReq = `game.php?t=${game_data.player.id}&screen=place&mode=scavenge_mass`;
@@ -106,6 +106,10 @@ function initMassScavenge() {
 					} else {
 						var htmlString = buildUI();
 						var settings = getSettings();
+						if (DEBUG) {
+							console.debug(`${scriptInfo()} Settings: `, settings);
+						}
+
 						var requests = calculateOptimalSquads(settings, scavengeTable, amountOfPages, durationFactor, durationExponent);
 						var groupNum = Object.keys(requests).length;
 
@@ -175,8 +179,13 @@ function initMassScavenge() {
 
 						$('.zHours').val(settings['max_away_time']);
 
+
+
 						jQuery('#recalculate').on('click', function (e) {
 							e.preventDefault();
+							if (DEBUG) {
+								console.debug(`${scriptInfo()} Recalculating...:`);
+							}
 							getNewSettings();
 							initMassScavenge();
 						});
@@ -226,6 +235,9 @@ $.getAll = function (urls, onLoad, onDone, onError) {
 };
 
 function renderUI(body) {
+	if (DEBUG) {
+		console.debug(`${scriptInfo()} Rendering UI...`);
+	}
 	const content = `
 		<div class="ra-mass-scav vis" id="raMassScav">
 		<h2 align="center"> <img src="https://dsen.innogamescdn.com/asset/ed7de11c/graphic/unit/unit_militia.png"> ${scriptData.name} <img src="https://dsen.innogamescdn.com/asset/ed7de11c/graphic/unit/unit_militia.png"></h2>
@@ -376,9 +388,12 @@ function calculateOptimalSquads(settings, scavengeTable, amountOfPages, duration
 	return requestLists;
 }
 
-function sendSquadGroups(requests) {
+function sendSquadGroups(requests, n) {
 	jQuery('.btn-group-scav').on('click', function (e) {
 		e.preventDefault();
+		if (DEBUG) {
+			console.debug(`${scriptInfo()} Sending group ${n}:`);
+		}
 		jQuery('.btn-group-scav').attr('disabled', 'disabled');
  		const groupId = jQuery(this).attr('group-id');
 		requests.forEach((request, i) => {
@@ -417,15 +432,54 @@ function initInitialDistribution(settings, units) {
     ]
 	var remaining = [];
 
-	remaining[0] = units["spear"];
-	remaining[1] = units["sword"];
-	remaining[2] = units["axe"];
-	remaining[4] = units["light"];
-	remaining[6] = units["heavy"];
+	if (settings["max_away_time"]["spear"] == false) {
+		remaining[0] = 0;
+	}
+	else {
+		remaining[0] = units["spear"];
+	}
+
+	if (settings["max_away_time"]["sword"] == false) {
+		remaining[1] = 0;
+	}
+	else {
+		remaining[1] = units["sword"];
+	}
+
+	if (settings["max_away_time"]["axe"] == false) {
+		remaining[2] = 0;
+	}
+	else {
+		remaining[2] = units["axe"];
+	}
+
+	if (settings["max_away_time"]["light"] == false) {
+		remaining[4] = 0;
+	}
+	else {
+		remaining[4] = units["light"];
+	}
+
+	if (settings["max_away_time"]["heavy"] == false) {
+		remaining[5] = 0;
+	}
+	else {
+		remaining[5] = units["heavy"];
+	}
 
 	if (archerWorld){
-		remaining[3] = units["archer"];
-		remaining[5] = units["marcher"];
+		if (settings["max_away_time"]["archer"] == false) {
+			remaining[3] = 0;
+		}
+		else {
+			remaining[3] = units["archer"];
+		}
+		if (settings["max_away_time"]["marcher"] == false) {
+			remaining[5] = 0;
+		}
+		else {
+			remaining[5] = units["marcher"];
+		}
 	}
 	else {
 		remaining[3] = 0;
@@ -509,8 +563,8 @@ function scriptInfo() {
 }
 
 function initDebug() {
-	console.debug(`${scriptInfo()} Script working`);
 	if (DEBUG) {
+		console.debug(`${scriptInfo()} Script working`);
 		console.debug(`${scriptInfo()} World:`, game_data.world);
 		console.debug(`${scriptInfo()} Game Version:`, game_data.majorVersion);
 		console.debug(`${scriptInfo()} Game Build:`, game_data.version);
@@ -596,6 +650,9 @@ function buildUI() {
 }
 
 function getNewSettings() {
+	if (DEBUG) {
+		console.debug(`${scriptInfo()} Applying new settings...:`);
+	}
 	var maxAwayTime = Number(document.getElementById("zHours").value);
 
 	var validNumber = isNaN(maxAwayTime);
@@ -656,6 +713,9 @@ function getNewSettings() {
 }
 
 function getSettings() {
+	if (DEBUG) {
+		console.debug(`${scriptInfo()} Fetching settings from local storage...:`);
+	}
 	var maxAwayTime = localStorage.getItem("zMaxAwayTime");
 	if (maxAwayTime == null) {
 		maxAwayTime = 99;
@@ -675,10 +735,16 @@ function getSettings() {
 
 
 (function () {
-	// if (game_data.features.Premium.active) {
-	if (true) {
+	if (game_data.features.Premium.active) {
+	// if (true) {
+		if (DEBUG) {
+			console.debug(`${scriptInfo()} Initializing script...:`);
+		}
 		initMassScavenge();
 	} else {
+		if (DEBUG) {
+			console.debug(`${scriptInfo()} Premium account required`);
+		}
 		UI.ErrorMessage('Premium Account is required for this script to run!');
 	}
 })();
