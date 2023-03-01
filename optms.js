@@ -45,6 +45,9 @@ function initMassScavenge() {
 		.done(function () {
 			let arrayWithData = '[';
 			let arrayWorldData = '[';
+			if (DEBUG) {
+				console.debug(`${scriptInfo()} URLs: `, URLs);
+			}
 			jQuery.getAll(
 				URLs,
 				(_, data) => {
