@@ -1,5 +1,9 @@
 javascript:
 
+// if (typeof DEBUG !== 'boolean') DEBUG = false;
+if (typeof DEBUG !== 'boolean') DEBUG = true;
+
+var starting = Date.now();
 var scriptName = 'Optimal Mass Scavenging -  ';
 var unitsHaulCapacity = [25, 15, 10, 10, 80, 50, 50];
 var unitPop = [1, 1, 1, 1, 4, 5, 6];
@@ -8,10 +12,6 @@ var pauseTime = 300;
 var archerWorld = false;
 var imageList = [];
 var imageStrings = [];
-
-// Change to true to debug
-if (typeof DEBUG !== 'boolean') DEBUG = false;
-// if (typeof DEBUG !== 'boolean') DEBUG = true;
 
 function runMassScavenge() {
 	var baseURL;
@@ -59,8 +59,9 @@ function runMassScavenge() {
 					const worldInfo = JSON.parse(worldDataArray);
 					const infoTable = [];
 
-					scavengingInfo.forEach((scavObj) => {
-						const { village_id, village_name, options, unit_counts_home } = scavObj;
+					let tableLength = scavengingInfo.length;
+					for (var i = 0; i < tableLength; i++) {
+						const { village_id, village_name, options, unit_counts_home } = scavengingInfo[i];
 						const tempOptions = [];
 						const validOptions = [];
 						const unitCounts = [];
@@ -79,7 +80,8 @@ function runMassScavenge() {
 								unit_counts: unit_counts_home
 							});
 						}
-					});
+
+					}
 
 					if (infoTable.length == 0) {
 						UI.ErrorMessage('Scavenging not possible right now');
@@ -104,12 +106,13 @@ function runMassScavenge() {
 					if (noOfGroups == 0) {
 						UI.ErrorMessage('No avaiable options');
 					}
+
 					let noOfSquads = 0;
 					let requestVillages = [];
-
 					let noOfUnits = [0,0,0,0,0,0,0];
 
-					requests.forEach((request, i) => {
+					for (var u = 0; u < noOfGroups; u++) {
+						let request = requests[u];
 						for (let [_, value] of Object.entries(request)) {
 							if (requestVillages.includes(value['village_id']) == false) {
 								requestVillages.push(value['village_id']);
@@ -125,7 +128,8 @@ function runMassScavenge() {
 							}
 						}
 						noOfSquads += Object.keys(request).length;
-					});
+					}
+
 					let noOfVillages = requestVillages.length;
 
 					if (imageStrings === undefined || imageStrings .length == 0) {
@@ -138,7 +142,6 @@ function runMassScavenge() {
 					for (var p = 0; p < 9; p++) {
 						if (p < 7) {
 							unitStrings.push("");
-							// if (true) {
 							if (noOfUnits[p] > 0) {
 								unitStrings[p] += imageStrings[p];
 								unitStrings[p] += noOfUnits[p];
@@ -152,29 +155,31 @@ function runMassScavenge() {
 					}
 
 
-					htmlString += `
-		<br>
-		<div class="ra-output">
-			<h3 class="ra-info-text">
-				${'Groups: '} ${noOfGroups}  &nbsp; ${'Villages: '} ${noOfVillages} &nbsp; ${'Squads: '} ${noOfSquads}
-			</h3>
-		<table class="ra-table" align="center" width="100%">
-			<tbody>
-				<tr>
-					<td class="ra-unit-counts" width="70%">
-						<h4>
-							<pre>${unitStrings[0]}${unitStrings[1]}${unitStrings[2]}${unitStrings[3]}</pre>
-							<pre>${unitStrings[4]}${unitStrings[5]}${unitStrings[6]}</pre>
-						</h4>
-					</td>
-					<td class="ra-text-center">
-						<a href="#" class="btn btn-confirm-yes btn-mass-scav" group-id="1"> ${'Send squads '}</a>
-			</td>
-		</tr>
-			</tbody>
-		</table>
-		</div>
+					if (noOfGroups > 0) {
+						htmlString += `
+			<br>
+			<div class="ra-output">
+				<h3 class="ra-info-text">
+					${'Groups: '} ${noOfGroups}  &nbsp; ${'Villages: '} ${noOfVillages} &nbsp; ${'Squads: '} ${noOfSquads}
+				</h3>
+			<table class="ra-table" align="center" width="100%">
+				<tbody>
+					<tr>
+						<td class="ra-unit-counts" width="70%">
+							<h4>
+								<pre>${unitStrings[0]}${unitStrings[1]}${unitStrings[2]}${unitStrings[3]}</pre>
+								<pre>${unitStrings[4]}${unitStrings[5]}${unitStrings[6]}</pre>
+							</h4>
+						</td>
+						<td class="ra-text-center">
+							<a href="#" class="btn btn-confirm-yes btn-mass-scav" group-id="1"> ${'Send squads '}</a>
+				</td>
+			</tr>
+				</tbody>
+			</table>
+			</div>
 					`;
+					}
 
 					var content = `
 							${htmlString}
@@ -217,6 +222,12 @@ function runMassScavenge() {
 						runMassScavenge();
 					});
 					sendSquadGroups(requests);
+					if (DEBUG) {
+						let timeBeforeReady = Date.now();
+						let elapsedMilliseconds = timeBeforeReady - starting;
+						console.debug(`${scriptName} Elapsed time (ms) before button can be pressed: `, elapsedMilliseconds);
+					}
+
 				},
 				(error) => {
 					console.error(error);
@@ -344,7 +355,7 @@ function renderUI(body) {
 	<style>
 		.ra-mass-scav { position: fixed; z-index: 99999; top: 10vh; right: 10vw; display: block; width: 400px; height: auto; clear: both;
 		margin: 0 auto 15px; padding: 12px; border: 1px solid #603000; box-sizing: border-box;
-		background-image: url(https://dsen.innogamescdn.com/asset/59fb2ca0/graphic/background/bg-image.jpg);
+		background-image: url(https://dsen.innogamescdn.com/asset/59fb2ca0/graphic/background/bg-image.jpg); opacity: 95%;
 		background-repeat: no-repeat; background-position:bottom; }
 		.ra-mass-scav * { box-sizing: border-box; }
 		.custom-close-button { right: 0; top: 0; }
@@ -358,6 +369,9 @@ function renderUI(body) {
 		.ra-unit-counts { text-align: center; line-height: 0.5em; }
 		.ra-mass-scav-settings { margin-top: 8px; }
 		.zscavengeTable { background: rgba(244, 228, 188, 1); }
+		.btn-confirm-yes:hover { background: rgba(255,0,0,1); color: #050505; box-shadow: inset 0 0 0 3px #000000; }
+}
+
 	</style>
 `;
 
@@ -439,53 +453,56 @@ function calculateOptimalSquads(settings, infoTable, pageCount, durationFactor, 
 		}
 		requests = [];
 
-		correctedDistributions.forEach((village) => {
-			let idVillage = village[0];
-			village[1].forEach((option, i) => {
+		let cdNo = correctedDistributions.length;
+		let requestNum = 0;
+		for (var t = 0; t < cdNo; t++) {
+			let village = correctedDistributions[t];
+			let noOfOptions = village[t].length;
+			for (var e = 0; e < noOfOptions; e++) {
 				let sum = 0;
-				option.forEach((unit) => {
+				for (unit = 0; unit < 7; unit++) {
 					sum += unit;
-				});
-				if (sum != 0) {
-					let request = { "villageId": idVillage, "unitCounts": option, "optionId": i};
-					requests.push(request);
 				}
-			});
-		});
-
+				if (sum != 0) {
+					let request = { "villageId": village[0], "unitCounts": option, "optionId": i};
+					requests.push(request);
+					requestNum++;
+				}
+			}
+			}
 		let squadRequests = {};
 		let squadRequestIndex = {};
-		requests.forEach((request, i) => {
-		const { villageId, unitCounts, optionId } = request;
-		let candidateSquad = {
-			'unit_counts': {
-				'spear': unitCounts[0],
-				'sword': unitCounts[1],
-				'axe': unitCounts[2],
-				'light': unitCounts[4],
-				'heavy': unitCounts[6]
-			},
-			carry_max: 9999999999
-		};
-		let squadRequest = {
-				'village_id': villageId,
-				'candidate_squad': candidateSquad,
-				'option_id': optionId+1,
-				'use_premium': false,
-		};
-		squadRequestIndex[i] = squadRequest;
-		squadRequests[i] = squadRequest;
-		});
+
+		for (var d = 0; d < requestNum; d++) {
+			let request = requests[d];
+
+			const { villageId, unitCounts, optionId } = request;
+			let candidateSquad = {
+				'unit_counts': {
+					'spear': unitCounts[0],
+					'sword': unitCounts[1],
+					'axe': unitCounts[2],
+					'light': unitCounts[4],
+					'heavy': unitCounts[6]
+				},
+				carry_max: 9999999999
+			};
+			let squadRequest = {
+					'village_id': villageId,
+					'candidate_squad': candidateSquad,
+					'option_id': optionId+1,
+					'use_premium': false,
+			};
+			squadRequests[d] = squadRequest;
+		}
 		requestList.push(squadRequests);
-		}
-
-	requestList.forEach((page) => {
-		let pageNum = Object.keys(page).length;
+	}
+	for (var q = 0; q <= pageCount; q++) {
+		let pageNum = Object.keys(q).length;
 		if (pageNum > 0) {
-			requestLists.push(page)
+			requestLists.push(q)
 		}
-
-	});
+	}
 	return requestLists;
 }
 
@@ -494,20 +511,18 @@ function sendSquadGroups(requests) {
 		e.preventDefault();
 		jQuery(this).attr('disabled', 'disabled');
 
-
-
-		requests.forEach((request, i) => {
+		let numberOfRequests = requests.length;
+		for (var w = 0; w < numberOfRequests; w++) {
 			TribalWars.post(
 			'scavenge_api',
 			{ ajaxaction: 'send_squads'},
 				{squad_requests: request}
 			);
-			setTimeout(() => {
-				if (DEBUG) {
-					console.debug(`${scriptName} Sending Group ${i+1}`);
-				}
-			}, pauseTime);
-		});
+			if (DEBUG) {
+				console.debug(`${scriptName} Sending Group ${i+1}`);
+			}
+			setTimeout(() => { }, pauseTime);
+		}
 		UI.SuccessMessage('Squads sent');
 		jQuery('.ra-mass-scav').fadeOut(500);
 	});
@@ -755,7 +770,6 @@ function getSettings() {
 	}
 
 	if (game_data.features.Premium.active) {
-	// if (true) {
 		if (DEBUG) {
 			console.debug(`${scriptName} Initializing Mass Scavenge script...`);
 		}
